@@ -1,0 +1,4 @@
+Coloca aqui tus imagenes (PNG con fondo transparente) o animaciones (.tres SpriteFrames).
+El nombre del archivo decide que objeto cambia: jugador.png, bug.png, farola.png,
+bloque_concreto.png, fondo_plaza_lejana.png, titulo.png, vineta_intro_1.png, fuente.ttf ...
+La lista completa esta en COMO_CAMBIAR_EL_ARTE.md (en la carpeta principal).

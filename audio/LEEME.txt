@@ -1,0 +1,6 @@
+Coloca aqui tus sonidos (.ogg recomendado, .wav o .mp3).
+Musica: menu, nivel_1, nivel_2, nivel_3, jefe, victoria, extra
+Efectos: salto, aterrizar, pared, dash, planeo, pisar, dano, reaparecer, apunte, cafe,
+sello, fragmento, farola, interruptor, puerta, glitch, chispa, golpe_jefe, menu
+Ejemplo: audio/salto.wav  audio/nivel_1.ogg
+Mas detalles en COMO_CAMBIAR_EL_ARTE.md
