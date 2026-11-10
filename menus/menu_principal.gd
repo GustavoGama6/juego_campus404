@@ -1,7 +1,7 @@
 extends Control
 # =====================================================================
 #  MENÚ PRINCIPAL: Jugar, Seleccionar nivel, Opciones, Créditos y Salir.
-#  Muestra el nombre del juego y a sus creadores (edítalos en autoload/juego.gd).
+#  Logo y presentación a la izquierda; acciones a la derecha. Equipo en Créditos.
 #  Fondo: la plaza de acceso con Kin y Chicle.
 # =====================================================================
 
@@ -23,27 +23,52 @@ func _ready() -> void:
 	add_child(fondo)
 	var escena := Escenita.new()
 	add_child(escena)
-	# Si hay una imagen de título propia, se usa (res://arte/titulo.png)
+	var sombra := ColorRect.new()
+	sombra.color = Color(0.025, 0.04, 0.07, 0.28)
+	sombra.size = Vector2(640, 360)
+	sombra.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(sombra)
+
+	var panel := Panel.new()
+	panel.name = "PanelAcciones"
+	panel.position = Vector2(374, 28)
+	panel.size = Vector2(238, 280)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(panel)
+	var encabezado := TEMA.titulo("TU CAMPUS TE NECESITA", 10, TEMA.TURQUESA)
+	encabezado.position = Vector2(390, 40)
+	encabezado.size = Vector2(206, 16)
+	add_child(encabezado)
+
+	# El logo tiene su propio espacio, separado de las acciones.
 	var tex_titulo := ARTE.textura("titulo")
 	if tex_titulo:
 		var tr2 := TextureRect.new()
+		tr2.name = "LogoCampus404"
 		tr2.texture = tex_titulo
-		tr2.position = Vector2(320 - tex_titulo.get_width() / 2.0, 14)
+		tr2.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr2.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tr2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		tr2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tr2.position = Vector2(34, 54)
+		tr2.size = Vector2(306, 152)
 		add_child(tr2)
 	else:
-		var t := TEMA.titulo(Juego.NOMBRE_JUEGO, 40)
-		t.position = Vector2(0, 16)
-		t.size = Vector2(640, 50)
+		var t := TEMA.titulo(Juego.NOMBRE_JUEGO, 34)
+		t.position = Vector2(24, 104)
+		t.size = Vector2(326, 50)
 		add_child(t)
-		var sub := TEMA.titulo("Reinicia el Núcleo antes de que cierre la entrega", 11, TEMA.BLANCO)
-		sub.position = Vector2(0, 66)
-		sub.size = Vector2(640, 16)
-		add_child(sub)
+
+	var sub := TEMA.titulo("Un estudiante. Un error.\nToda una universidad por recuperar.", 12, TEMA.BLANCO)
+	sub.position = Vector2(28, 222)
+	sub.size = Vector2(318, 42)
+	add_child(sub)
 
 	botones = VBoxContainer.new()
-	botones.position = Vector2(400, 96)
-	botones.size = Vector2(190, 200)
-	botones.add_theme_constant_override("separation", 7)
+	botones.name = "Acciones"
+	botones.position = Vector2(398, 68)
+	botones.size = Vector2(190, 220)
+	botones.add_theme_constant_override("separation", 8)
 	add_child(botones)
 	var texto_jugar: String = "Jugar" if not bool(Juego.datos["intro_vista"]) else "Continuar"
 	boton_jugar = TEMA.boton(texto_jugar, _jugar, 190)
@@ -58,25 +83,25 @@ func _ready() -> void:
 	if OS.get_name() != "Web":
 		botones.add_child(TEMA.boton("Salir", _salir, 190))
 
-		# Los nombres se reparten en 2 renglones para que quepan en pantalla
-	var lista: Array = Juego.CREADORES
-	var mitad: int = ceili(float(lista.size()) / 2.0)
-	var linea1 := " · ".join(PackedStringArray(lista.slice(0, mitad)))
-	var linea2 := " · ".join(PackedStringArray(lista.slice(mitad)))
-	var creadores := TEMA.titulo("Creado por: " + linea1 + ("\n" + linea2 if linea2 != "" else ""), 9, TEMA.BLANCO)
-	creadores.position = Vector2(0, 304)
-	creadores.size = Vector2(640, 30)
-	creadores.clip_text = true
-	add_child(creadores)
-	var materia := TEMA.titulo(Juego.MATERIA, 9, TEMA.AMARILLO)
-	materia.position = Vector2(0, 342)
-	materia.size = Vector2(640, 12)
+	for boton in botones.get_children():
+		boton.custom_minimum_size.y = 28
+	boton_jugar.add_theme_color_override("font_color", TEMA.AMARILLO)
+
+	var pie := ColorRect.new()
+	pie.position = Vector2(0, 324)
+	pie.size = Vector2(640, 36)
+	pie.color = Color(0.025, 0.04, 0.07, 0.9)
+	pie.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(pie)
+	var materia := TEMA.titulo(Juego.MATERIA, 10, TEMA.BLANCO)
+	materia.position = Vector2(20, 335)
+	materia.size = Vector2(600, 16)
 	add_child(materia)
 
 	if bool(Juego.datos.get("todo_abierto", false)):
-		var prueba := TEMA.titulo("MODO PRUEBA: todo desbloqueado (Opciones > Borrar progreso para quitarlo)", 9, TEMA.MAGENTA)
-		prueba.position = Vector2(10, 4)
-		prueba.size = Vector2(620, 12)
+		var prueba := TEMA.titulo("MODO PRUEBA · Todo desbloqueado", 9, TEMA.MAGENTA)
+		prueba.position = Vector2(28, 12)
+		prueba.size = Vector2(318, 14)
 		prueba.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		add_child(prueba)
 

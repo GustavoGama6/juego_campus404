@@ -79,7 +79,11 @@ Al terminar el juego se desbloquean el **nivel extra: El Lago** y el **modo Extr
 
 **Nivel 1 · Plaza de Acceso (mañana, 6 pantallas, meta 2:30).** Enseña correr, salto
 variable (barra de glitch que obliga a hacer salto corto), salto de pared en columnas,
-palanca que abre la reja, bugs, guana y vacíos. Fragmento 1 arriba de la escalinata → **dash**.
+terminal que restaura el acceso, bugs, guana y vacíos. La reparación abre la reja,
+enciende una zona de luz y elimina el glitch visual del acceso. Un objetivo en pantalla
+guía hasta la terminal, el fragmento y la salida. Hay un checkpoint antes de los primeros
+huecos, otro antes de la terminal y uno antes de la escalinata final.
+Fragmento 1 arriba de la escalinata → **dash**.
 Sello secreto que necesita dash (al rejugar).
 
 **Nivel 2 · Biblioteca (mediodía, 8 pantallas, meta 3:30).** Rayos de luz que congelan
