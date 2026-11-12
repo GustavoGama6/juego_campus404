@@ -34,6 +34,7 @@ const ARTE := preload("res://objetos/arte.gd")
 # --- Dash (Shift) ---
 @export var velocidad_dash: float = 320.0        # 320 px/s durante 0.2 s = 64 px
 @export var duracion_dash: float = 0.2
+@export var recarga_dash: float = 0.8 # espera después del dash, además de tocar suelo
 
 # --- Planeo (E en el aire; se queda activo, E otra vez cancela) ---
 @export var duracion_planeo: float = 5.0
@@ -79,6 +80,7 @@ var saltos_pared_usados: int = 0
 var saltos_aire_usados: int = 0
 
 var dash_tiempo: float = 0.0
+var dash_recarga_restante: float = 0.0
 var dash_disponible: bool = true
 var dash_direccion: float = 1.0
 
@@ -120,11 +122,20 @@ func _ready() -> void:
 			camara = hijo
 	if arte == null:
 		arte = ARTE.poner(self, "jugador")
+		if arte is Sprite2D:
+			# Región del personaje en jugador.png; conserva el original con sus márgenes.
+			# La altura visible coincide con la colisión de 24 px y los pies con el origen.
+			arte.region_enabled = true
+			arte.region_rect = Rect2(96, 68, 211, 499)
+			arte.offset = Vector2(0, -499.0 / 2.0)
+			arte.scale = Vector2.ONE * (24.0 / 499.0)
+			arte.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 # ================= FÍSICA =================
 func _physics_process(delta: float) -> void:
 	queue_redraw()
 	invulnerable = maxf(invulnerable - delta, 0.0)
+	dash_recarga_restante = maxf(dash_recarga_restante - delta, 0.0)
 	_actualizar_temblor(delta)
 
 	# Un instante quieto después de regresar de una trampa
@@ -151,7 +162,8 @@ func _physics_process(delta: float) -> void:
 		timer_coyote = 0.1
 		saltos_pared_usados = 0
 		saltos_aire_usados = 0
-		dash_disponible = true
+		if dash_tiempo <= 0.0:
+			dash_disponible = true
 		_terminar_planeo()
 		if not en_piso_antes:
 			Sonido.sfx("aterrizar")
@@ -189,8 +201,9 @@ func _physics_process(delta: float) -> void:
 		_lanzar_comida()
 
 	# --- Dash ---
-	if dash_habilitado and dash_disponible and dash_tiempo <= 0.0 and Input.is_action_just_pressed("dash"):
+	if dash_habilitado and dash_disponible and dash_tiempo <= 0.0 and dash_recarga_restante <= 0.0 and Input.is_action_just_pressed("dash"):
 		dash_tiempo = duracion_dash
+		dash_recarga_restante = duracion_dash + recarga_dash
 		dash_disponible = false
 		dash_direccion = dir if dir != 0.0 else (1.0 if mirando_derecha else -1.0)
 		mirando_derecha = dash_direccion > 0.0
@@ -409,6 +422,8 @@ func golpe_trampa() -> void:
 	global_position = punto_seguro
 	planeando = false
 	dash_tiempo = 0.0
+	dash_recarga_restante = 0.0
+	dash_disponible = true
 	saltos_pared_usados = 0
 	timer_buffer = 0.0
 	invulnerable = maxf(invulnerable, tiempo_invulnerable)
@@ -431,6 +446,8 @@ func _reaparecer() -> void:
 	invulnerable = 1.0
 	planeando = false
 	dash_tiempo = 0.0
+	dash_recarga_restante = 0.0
+	dash_disponible = true
 	saltos_pared_usados = 0
 	saltos_aire_usados = 0
 	timer_buffer = 0.0
@@ -446,7 +463,6 @@ func establecer_checkpoint(pos: Vector2) -> void:
 func rebotar(fuerza: float = -240.0) -> void:
 	velocity.y = fuerza
 	timer_coyote = 0.0
-	dash_disponible = true
 
 func empujar_viento(fuerza: float) -> void:
 	viento = maxf(viento, fuerza * (1.25 if planeando else 1.0))
