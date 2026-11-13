@@ -7,8 +7,8 @@ extends Node
 # =====================================================================
 
 # ---------- Datos del juego (edítalos aquí) ----------
-const NOMBRE_JUEGO := "CAMPUS 404"
-const PROTAGONISTA := "Kin"
+const NOMBRE_JUEGO := "ERROR 404: El Código Perdido"
+const PROTAGONISTA := "Yoshua"
 const CREADORES := [
 	"Brandon Alexis Castillo Hernández",
 	"JADE MABEL JUAREZ ARVIZU",
@@ -103,7 +103,7 @@ func extraordinario() -> bool:
 	return dificultad == "extraordinario"
 
 func extraordinario_desbloqueado() -> bool:
-	return bool(datos["juego_terminado"])
+	return bool(datos["juego_terminado"]) or bool(datos.get("todo_abierto", false))
 
 func set_dificultad(d: String) -> void:
 	if d == "extraordinario" and not extraordinario_desbloqueado():
@@ -146,7 +146,6 @@ func progreso(id: String) -> Dictionary:
 # habilidades y el modo Extraordinario. Sirve para probar o para presentar.
 func modo_prueba() -> void:
 	datos["todo_abierto"] = true
-	datos["juego_terminado"] = true
 	datos["intro_vista"] = true
 	datos["habilidades"]["dash"] = true
 	datos["habilidades"]["planeo"] = true
@@ -174,6 +173,8 @@ func desbloquear_habilidad(nombre: String) -> void:
 # Juega un nivel por id ("nivel_1") o por índice (0, 1, 2)
 func jugar_nivel(cual) -> void:
 	var info: Dictionary = NIVELES[cual] if typeof(cual) == TYPE_INT else nivel_info(str(cual))
+	if not nivel_desbloqueado(info["id"]):
+		return
 	var sub: String = info["hora"] + ("   ·   MODO EXTRAORDINARIO" if extraordinario() else "")
 	cambiar_escena(info["escena"], info["acto"] + " · " + info["nombre"].to_upper(), sub)
 
@@ -271,6 +272,20 @@ func registrar_resultado(id: String, r: Dictionary) -> Dictionary:
 	guardar()
 	return {"calificacion": cal, "etiqueta": etiqueta(cal["total"]), "logros_nuevos": nuevos,
 		"premio": premio, "primera_vez": primera_vez, "siguiente": siguiente_de(id)}
+
+# Un fragmento por acto completado; repetir un acto nunca duplica el total.
+func fragmentos_recuperados(id_actual: String = "", obtenido: bool = false) -> int:
+	var total := 0
+	for n in NIVELES:
+		if bool(progreso(n["id"])["completado"]) or (n["id"] == id_actual and obtenido):
+			total += 1
+	return total
+
+func actos_previos_completos(id: String) -> bool:
+	for i in range(maxi(indice_de(id), 0)):
+		if not bool(progreso(NIVELES[i]["id"])["completado"]):
+			return false
+	return true
 
 func total_sellos(clave: String = "") -> int:
 	if clave == "":

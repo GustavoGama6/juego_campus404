@@ -47,7 +47,7 @@ func _process(_delta: float) -> void:
 		return
 	if Juego.en_transicion() or opciones.visible:
 		return
-	if nivel and bool(nivel.get("terminado")):
+	if nivel and (bool(nivel.get("terminado")) or bool(nivel.get("desafio_activo"))):
 		return
 	if visible:
 		cerrar()

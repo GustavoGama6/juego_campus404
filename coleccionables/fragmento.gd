@@ -8,6 +8,7 @@ signal tomado
 
 const ARTE := preload("res://objetos/arte.gd")
 
+var recogido_ya: bool = false
 var tiempo: float = 0.0
 var base_y: float = 0.0
 var arte: Node2D = null
@@ -28,8 +29,10 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _on_body_entered(b: Node2D) -> void:
-	if not b.is_in_group("jugador"):
+	if recogido_ya or not b.is_in_group("jugador"):
 		return
+	recogido_ya = true
+	set_deferred("monitoring", false)
 	Sonido.sfx("fragmento")
 	tomado.emit()
 	queue_free()

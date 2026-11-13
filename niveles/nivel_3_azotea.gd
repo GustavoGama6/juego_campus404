@@ -13,8 +13,12 @@ const INICIO_ARENA := 5800.0
 
 var jefe: Node2D = null
 var puerta_arena: Node2D = null
+var puerta_nucleo: Node2D = null
 var terminales: Array = []
 var pelea_empezada: bool = false
+var jefe_derrotado: bool = false
+var sistema_reparado: bool = false
+var terminal_reparacion: Node2D
 
 func configurar() -> void:
 	id_nivel = "nivel_3"
@@ -32,13 +36,13 @@ func al_empezar() -> void:
 func construir() -> void:
 	bloque(-16, -600, 16, 960, "metal")                             # pared izquierda
 	# La puerta del Núcleo (pantalla 8) se crea primero para conectarle los 3 interruptores
-	var puerta_nucleo := puerta(5060, -424, 32, 200, "sellada", 3)
+	puerta_nucleo = puerta(5060, -424, 32, 200, "sellada", 3)
 
 	# ------------------------------------------------------------------
 	# PANTALLA 1: escalera de emergencia (repaso de salto y dash)
 	# ------------------------------------------------------------------
 	bloque(0, 320, 200, 40, "azotea")
-	pantalla_ixchel(60, 320, "Último tramo, Kin. Activa los 3 interruptores de la azotea para abrir la puerta del Núcleo. Error 404 te espera adentro.")
+	pantalla_ixchel(60, 320, "Último tramo, Yoshua. Activa los 3 interruptores de la azotea para abrir la puerta del Núcleo. Error 404 te espera adentro.")
 	vacio(200, 330, 400)
 	bloque(210, 288, 70, 12, "metal")
 	bloque(310, 256, 70, 12, "metal")
@@ -214,6 +218,8 @@ func _process(delta: float) -> void:
 		_empezar_pelea()
 
 func _empezar_pelea() -> void:
+	if int(puerta_nucleo.get("contados")) < 3:
+		return
 	pelea_empezada = true
 	puerta_arena.call("cerrar")
 	# Normal: si caes, reapareces dentro de la arena y el jefe conserva el daño.
@@ -225,7 +231,7 @@ func _empezar_pelea() -> void:
 	hud.anuncio("¡ERROR 404!\nEsquiva sus ataques y activa la terminal (%s) cuando quede aturdido" % Juego.tecla("interactuar"), 4.0)
 	jefe.call("empezar")
 
-# Extraordinario: si Kin se queda sin vasos durante la pelea, todo se reinicia
+# Extraordinario: si Yoshua se queda sin vasos durante la pelea, todo se reinicia
 func _al_reaparecer() -> void:
 	super()
 	if ext and pelea_empezada and is_instance_valid(jefe) and jefe.call("esta_activo"):
@@ -258,6 +264,9 @@ func _on_jefe_vida(vida: int, maxima: int) -> void:
 	hud.vida_jefe(vida, maxima)
 
 func _on_jefe_derrotado() -> void:
+	if jefe_derrotado:
+		return
+	jefe_derrotado = true
 	hud.ocultar_jefe()
 	Juego.destello(0.8)
 	Sonido.musica("victoria")
@@ -272,13 +281,44 @@ func _on_jefe_derrotado() -> void:
 	call_deferred("fragmento", 6080.0, 250.0)
 
 func _on_fragmento() -> void:
+	if fragmento_obtenido or not jefe_derrotado:
+		return
 	fragmento_obtenido = true
-	hud.anuncio("¡FRAGMENTO 3 DEL CÓDICE!\nEl Códice está completo", 3.0)
-	await get_tree().create_timer(1.6).timeout
-	completar_nivel()
+	hud.flash.color = Color(0.16, 0.9, 1.0, 0.18)
+	hud.anuncio("¡ÚLTIMO FRAGMENTO RECUPERADO!\nActiva la terminal central para reconstruir el código", 4.0)
+	terminal_reparacion = terminales[1]
+	terminal_reparacion.set("jefe", null)
+	terminal_reparacion.call("reiniciar")
+	terminal_reparacion.call("activar", true)
+	terminal_reparacion.connect("usada_signal", _abrir_reparacion)
+
+func _abrir_reparacion() -> void:
+	if desafio_activo or terminado:
+		return
+	if not Juego.actos_previos_completos(id_nivel):
+		hud.anuncio("Completa Plaza y Biblioteca antes de reparar el Núcleo", 4.0)
+		_reactivar_terminal()
+		return
+	desafio_activo = true
+	var desafio = preload("res://ui/desafio_codigo.gd").new()
+	desafio.resuelto.connect(func():
+		desafio_activo = false
+		sistema_reparado = true
+		completar_nivel())
+	desafio.cancelado.connect(func():
+		desafio_activo = false
+		_reactivar_terminal())
+	add_child(desafio)
+
+func _reactivar_terminal() -> void:
+	terminal_reparacion.call("reiniciar")
+	terminal_reparacion.call("activar", true)
 
 # El último nivel termina con la viñeta final y la pantalla de fin del juego
 func completar_nivel() -> void:
+	if int(puerta_nucleo.get("contados")) < 3 or not sistema_reparado or not fragmento_obtenido or not jefe_derrotado or not Juego.actos_previos_completos(id_nivel):
+		hud.anuncio("Recupera los fragmentos de Plaza y Biblioteca para reparar el sistema", 4.0)
+		return
 	if terminado:
 		return
 	terminado = true
@@ -289,3 +329,12 @@ func completar_nivel() -> void:
 	Juego.destello(1.0)
 	await get_tree().create_timer(1.0).timeout
 	Juego.ver_historia("final", Juego.FIN_JUEGO)
+
+func mision_actual() -> String:
+	if fragmento_obtenido:
+		return "Activa la terminal central y reconstruye el código"
+	if jefe_derrotado:
+		return "Recoge el último fragmento sobre las terminales"
+	if pelea_empezada:
+		return "Esquiva y activa las terminales cuando el jefe se aturda"
+	return "Activa los 3 interruptores y entra al Núcleo"

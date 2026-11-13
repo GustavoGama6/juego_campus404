@@ -2,7 +2,7 @@ extends Control
 # =====================================================================
 #  MENÚ PRINCIPAL: Jugar, Seleccionar nivel, Opciones, Créditos y Salir.
 #  Logo y presentación a la izquierda; acciones a la derecha. Equipo en Créditos.
-#  Fondo: la plaza de acceso con Kin y Chicle.
+#  Fondo: la plaza de acceso con Yoshua y Chicle.
 # =====================================================================
 
 const TEMA := preload("res://ui/tema.gd")
@@ -59,7 +59,7 @@ func _ready() -> void:
 		t.size = Vector2(326, 50)
 		add_child(t)
 
-	var sub := TEMA.titulo("Un estudiante. Un error.\nToda una universidad por recuperar.", 12, TEMA.BLANCO)
+	var sub := TEMA.titulo("ERROR 404: El Código Perdido\nYoshua · Universidad del Caribe", 12, TEMA.BLANCO)
 	sub.position = Vector2(28, 222)
 	sub.size = Vector2(318, 42)
 	add_child(sub)
@@ -142,7 +142,7 @@ func _salir() -> void:
 	get_tree().quit()
 
 
-# Kin y Chicle parados en la plaza (dibujo provisional)
+# Yoshua y Chicle parados en la plaza (dibujo provisional)
 class Escenita extends Node2D:
 	var tiempo: float = 0.0
 
@@ -153,7 +153,7 @@ class Escenita extends Node2D:
 	func _draw() -> void:
 		draw_rect(Rect2(0, 300, 640, 60), Color("#9AA5A8"))
 		draw_rect(Rect2(0, 300, 640, 3), Color("#C9D1D3"))
-		# Kin
+		# Yoshua
 		var o := Vector2(150, 300)
 		var resp: float = sin(tiempo * 2.0)
 		draw_rect(Rect2(o.x - 8, o.y - 17, 5, 9), Color("#9AA5A8"))

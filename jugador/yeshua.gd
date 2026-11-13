@@ -1,6 +1,6 @@
 extends CharacterBody2D
 # =====================================================================
-#  JUGADOR (Kin). Movimiento, salto, salto de pared, dash, planeo,
+#  JUGADOR (Yoshua). Movimiento, salto, salto de pared, dash, planeo,
 #  interactuar, energía (3 vasos de café) y reaparición en la farola.
 #  Las habilidades se prenden con desbloquear("dash") o desbloquear("planeo").
 #  Para cambiar el dibujo por tus sprites: res://arte/jugador.tres
@@ -205,7 +205,7 @@ func _physics_process(delta: float) -> void:
 		dash_tiempo = duracion_dash
 		dash_recarga_restante = duracion_dash + recarga_dash
 		dash_disponible = false
-		dash_direccion = dir if dir != 0.0 else (1.0 if mirando_derecha else -1.0)
+		dash_direccion = signf(dir) if dir != 0.0 else (1.0 if mirando_derecha else -1.0)
 		mirando_derecha = dash_direccion > 0.0
 		planeando = false
 		Sonido.sfx("dash")
@@ -349,6 +349,11 @@ func _buscar_interactuable() -> void:
 		var punto: Vector2 = obj.call("punto_interaccion") if obj.has_method("punto_interaccion") else obj.global_position
 		var d: Vector2 = punto - global_position
 		if absf(d.x) < 24.0 and absf(d.y) < 40.0 and d.length() < mejor:
+			# No activar terminales ni interruptores a través de paredes.
+			var consulta := PhysicsRayQueryParameters2D.create(global_position + Vector2(0, -12), punto + Vector2(0, -12), collision_mask, [get_rid()])
+			var impacto := get_world_2d().direct_space_state.intersect_ray(consulta)
+			if not impacto.is_empty() and impacto["collider"] != obj:
+				continue
 			mejor = d.length()
 			objeto_cercano = obj
 
@@ -451,6 +456,12 @@ func _reaparecer() -> void:
 	saltos_pared_usados = 0
 	saltos_aire_usados = 0
 	timer_buffer = 0.0
+	timer_coyote = 0.0
+	timer_pared = 0.0
+	viento = 0.0
+	empuje_x = 0.0
+	piso_mojado = 0
+	objeto_cercano = null
 	if camara:
 		camara.reset_smoothing()
 	Sonido.sfx("reaparecer")
@@ -520,6 +531,10 @@ func _actualizar_animacion(dir: float) -> void:
 	elif absf(velocity.x) > 10.0:
 		nombre = "correr"
 	ARTE.animar(arte, nombre)
+	if arte is Sprite2D:
+		# Movimiento sutil para el PNG existente, sin requerir una hoja de sprites.
+		arte.position.y = sin(anim_tiempo * 2.0) * 0.7 if nombre == "correr" else 0.0
+		arte.rotation = clampf(velocity.x * 0.00025, -0.08, 0.08) if nombre == "dash" else 0.0
 	# Parpadeo de invulnerabilidad
 	arte.visible = invulnerable <= 0.0 or fmod(invulnerable, 0.15) > 0.07
 
@@ -529,6 +544,14 @@ func _draw() -> void:
 		draw_rect(Rect2(-11.0, -32.0, 22.0, 3.0), Color("#F5C242"))
 		draw_line(Vector2(-9.0, -29.0), Vector2(-3.0, -24.0), Color("#9AA5A8"), 1.0)
 		draw_line(Vector2(9.0, -29.0), Vector2(3.0, -24.0), Color("#9AA5A8"), 1.0)
+	if is_on_floor():
+		draw_line(Vector2(-7, -1), Vector2(7, -1), Color(0.02, 0.03, 0.05, 0.3), 3.0)
+	var dir_estela: float = 1.0 if mirando_derecha else -1.0
+	# Estela del dash
+	if dash_tiempo > 0.0:
+		for k in range(3):
+			draw_rect(Rect2(-5.0 - dir_estela * (8.0 + k * 6.0), -18.0, 10.0, 12.0), Color(0.12, 0.71, 0.76, 0.25 - k * 0.07))
+
 	if arte != null:
 		return
 	# Parpadeo cuando acaba de recibir daño
@@ -538,10 +561,6 @@ func _draw() -> void:
 	var dir_x: float = 1.0 if mirando_derecha else -1.0
 	var offset_pie: float = sin(anim_tiempo) * 2.0 if is_on_floor() and absf(velocity.x) > 10.0 else 0.0
 
-	# Estela del dash
-	if dash_tiempo > 0.0:
-		for k in range(3):
-			draw_rect(Rect2(-5.0 - dir_x * (8.0 + k * 6.0), -18.0, 10.0, 12.0), Color(0.12, 0.71, 0.76, 0.25 - k * 0.07))
 
 	# Mochila planeadora
 	draw_rect(Rect2(-6.0 * dir_x - 2.0, -17.0, 5.0, 9.0), Color("#9AA5A8"))

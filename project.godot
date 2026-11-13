@@ -10,9 +10,11 @@ config_version=5
 
 [application]
 
-config/name="Campus 404"
+config/name="ERROR 404: El Código Perdido"
 config/description="Plataformero 2D ambientado en un campus inspirado en la Universidad del Caribe."
 run/main_scene="res://menus/menu_principal.tscn"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="app_userdata/Campus 404"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [autoload]

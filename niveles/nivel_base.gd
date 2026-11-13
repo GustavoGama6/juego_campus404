@@ -74,6 +74,7 @@ var sellos_recogidos: int = 0
 var sellos_ids: Array = []
 var tiempo: float = 0.0
 var terminado: bool = false
+var desafio_activo: bool = false
 var fragmento_obtenido: bool = false
 var registro_enemigos: Array = []
 var ext: bool = false   # true = modo Extraordinario (en construir() se usa: if ext: ...)
@@ -151,9 +152,11 @@ func _crear_jugador() -> void:
 	jugador.reaparecio.connect(_al_reaparecer)
 
 func _al_reaparecer() -> void:
+	if hud:
+		hud.aviso("REINTENTO · Checkpoint restaurado; conservas tus objetos", 2.5)
 	call_deferred("_reponer_enemigos")
 
-# Los enemigos derrotados vuelven a aparecer cuando Kin reaparece (GDD)
+# Los enemigos derrotados vuelven a aparecer cuando Yoshua reaparece (GDD)
 func _reponer_enemigos() -> void:
 	for r in registro_enemigos:
 		if not is_instance_valid(r["nodo"]) or r["nodo"].get("muerto"):
@@ -388,7 +391,7 @@ func credencial(x: float, y: float) -> void:
 	add_child(c)
 
 # ======================================================================
-#  ENEMIGOS (vuelven a aparecer cuando Kin reaparece)
+#  ENEMIGOS (vuelven a aparecer cuando Yoshua reaparece)
 # ======================================================================
 func bug(x: float, y: float, rango: float = 60.0) -> void:
 	_registrar(func(): return _hacer_bug(x, y, rango))
@@ -457,6 +460,8 @@ func _hacer_cable(x: float, y: float, alto: float, desfase: float) -> Node2D:
 # ======================================================================
 func _on_recogido(es_sello: bool, id: int) -> void:
 	if es_sello:
+		if sellos_ids.has(id):
+			return
 		sellos_recogidos += 1
 		sellos_ids.append(id)
 		hud.aviso("¡SELLO DE HONOR! (%d/%d)" % [sellos_recogidos, sellos_total])
@@ -473,7 +478,10 @@ func _on_credencial() -> void:
 	hud.anuncio("¡CREDENCIAL!\nAbre la puerta con candado: acércate y presiona %s" % Juego.tecla("interactuar"), 3.0)
 
 func _on_fragmento() -> void:
+	if fragmento_obtenido or terminado:
+		return
 	fragmento_obtenido = true
+	hud.flash.color = Color(0.16, 0.9, 1.0, 0.18)
 	var premio: String = info.get("premio", "") if not ext else ""
 	var texto: String = "¡FRAGMENTO %d DEL CÓDICE!" % int(info["numero"])
 	if premio != "":
@@ -498,6 +506,8 @@ func estadisticas() -> Dictionary:
 
 # Se llama al entrar a la salida (o al final del jefe)
 func completar_nivel() -> void:
+	if usa_fragmento and not fragmento_obtenido:
+		return
 	if terminado:
 		return
 	terminado = true
@@ -508,3 +518,11 @@ func completar_nivel() -> void:
 	var fin = FIN_NIVEL.new()
 	add_child(fin)
 	fin.mostrar(info, stats, r)
+
+# Una guía breve que sigue los estados reales de cada acto.
+func mision_actual() -> String:
+	if not usa_fragmento:
+		return "Explora el lago y vence al Rey Cocodrilo"
+	if fragmento_obtenido:
+		return "Llega a la salida para guardar el fragmento"
+	return "Explora %s y recupera el fragmento" % info["nombre"]

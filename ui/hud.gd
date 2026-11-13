@@ -13,6 +13,8 @@ var lbl_apuntes: Label
 var lbl_tiempo: Label
 var lbl_nivel: Label
 var lbl_fragmento: Label
+var lbl_mision: Label
+var lbl_interaccion: Label
 var lbl_comida: Label
 var lbl_aviso: Label
 var lbl_anuncio: Label
@@ -21,7 +23,7 @@ var lbl_jefe: Label
 var barra_jefe: ColorRect
 var flash: ColorRect
 
-var lbl_debug: Label          # F3: muestra la posición de Kin (para diseñar niveles)
+var lbl_debug: Label          # F3: muestra la posición de Yoshua (para diseñar niveles)
 
 var aviso_timer: float = 0.0
 var anuncio_timer: float = 0.0
@@ -36,6 +38,8 @@ func _ready() -> void:
 
 	_etiqueta("ENERGÍA", Vector2(8, 4), 11, Color("#F4F1EA"))
 	lbl_fragmento = _etiqueta("FRAGMENTO 0/1", Vector2(8, 40), 11, Color("#F4F1EA"))
+	lbl_mision = _etiqueta("", Vector2(8, 72), 10, Color("#7CFFB2"))
+	lbl_interaccion = _etiqueta("", Vector2(190, 298), 11, Color("#F5C242"))
 	lbl_comida = _etiqueta("", Vector2(8, 290), 11, Color("#F2994A"))
 
 	lbl_apuntes = _etiqueta("", Vector2(0, 4), 12, Color("#F5C242"))
@@ -114,7 +118,9 @@ func _process(delta: float) -> void:
 	lbl_nivel.text = ("NIVEL %d: %s" % [int(info["numero"]), str(info["nombre"]).to_upper()]) if info["acto"] != "EXTRA" else "EXTRA: " + str(info["nombre"]).to_upper()
 	if Juego.extraordinario():
 		lbl_nivel.text += "\n[EXTRAORDINARIO]"
-	lbl_fragmento.text = "FRAGMENTO %d/1" % (1 if nivel.get("fragmento_obtenido") else 0)
+	lbl_fragmento.text = "Fragmentos recuperados: %d/%d" % [Juego.fragmentos_recuperados(info["id"], bool(nivel.get("fragmento_obtenido"))), Juego.NIVELES.size()]
+	lbl_mision.text = "MISIÓN: " + nivel.mision_actual()
+	lbl_interaccion.text = "[%s] Interactuar" % Juego.tecla("interactuar") if is_instance_valid(jugador.objeto_cercano) and jugador.is_on_floor() else ""
 	lbl_fragmento.visible = bool(nivel.get("usa_fragmento"))
 	lbl_comida.visible = jugador.lanzar_habilitado and jugador.comida_vista
 	lbl_comida.text = "COMIDA x%d   [%s] lanzar" % [jugador.comida, Juego.tecla("lanzar")]
@@ -133,7 +139,7 @@ func _process(delta: float) -> void:
 		lbl_debug.text = "x: %d   y: %d   (pantalla %d)" % [int(p.x), int(p.y), int(p.x / 640.0) + 1]
 	dibujo.queue_redraw()
 
-# F3 muestra / oculta la posición de Kin. Sirve para saber qué números
+# F3 muestra / oculta la posición de Yoshua. Sirve para saber qué números
 # poner en construir() cuando diseñen o muevan cosas del nivel.
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F3:
@@ -171,6 +177,8 @@ class Dibujo extends Control:
 		var n = hud.nivel
 		if j == null or n == null:
 			return
+		draw_rect(Rect2(0, 0, 640, 88), Color(0.025, 0.04, 0.07, 0.82))
+		draw_line(Vector2(0, 87), Vector2(640, 87), Color(0.12, 0.71, 0.76, 0.5))
 		# Vasos de café (energía)
 		for i in range(j.energia_maxima):
 			var x: float = 8.0 + i * 18.0
@@ -184,7 +192,7 @@ class Dibujo extends Control:
 		if n.get("usa_fragmento"):
 			var tiene: bool = n.get("fragmento_obtenido")
 			var c: Color = Color("#29E7FF") if tiene else Color("#5A6366")
-			var o := Vector2(104, 42)
+			var o := Vector2(210, 42)
 			draw_rect(Rect2(o, Vector2(12, 12)), c, false, 1.0)
 			draw_rect(Rect2(o + Vector2(3, 3), Vector2(6, 6)), c)
 			draw_rect(Rect2(o + Vector2(5, 5), Vector2(2, 2)), Color("#0B0B14"))

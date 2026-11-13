@@ -25,8 +25,8 @@ func _ready() -> void:
 	caja.add_theme_constant_override("separation", 4)
 	add_child(caja)
 	var ext: bool = Juego.extraordinario()
-	caja.add_child(TEMA.titulo("¡EXTRAORDINARIO APROBADO!" if ext else "¡ENTREGADO!", 26 if ext else 30, TEMA.MAGENTA if ext else TEMA.AMARILLO))
-	caja.add_child(TEMA.titulo("Sobreviviste al modo más difícil del campus." if ext else "El Códice está completo y el campus volvió a la normalidad.", 11, TEMA.BLANCO))
+	caja.add_child(TEMA.titulo("¡EXTRAORDINARIO APROBADO!" if ext else "¡SISTEMA RESTAURADO!", 26 if ext else 26, TEMA.MAGENTA if ext else TEMA.AMARILLO))
+	caja.add_child(TEMA.titulo("Sobreviviste al modo más difícil del campus." if ext else "¡Felicidades, Yoshua! Código recuperado. MISIÓN COMPLETADA.", 11, TEMA.BLANCO))
 	var total := Juego.calificacion_final()
 	caja.add_child(TEMA.titulo("CALIFICACIÓN FINAL: %.1f / 10  ·  %s" % [total, Juego.etiqueta(total)], 16, TEMA.AMARILLO))
 

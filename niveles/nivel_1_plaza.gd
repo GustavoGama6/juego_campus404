@@ -23,14 +23,7 @@ func configurar() -> void:
 	fondo_variante = "plaza"
 
 func al_empezar() -> void:
-	objetivo = Label.new()
-	objetivo.position = Vector2(8, 76)
-	objetivo.add_theme_font_size_override("font_size", 10)
-	objetivo.add_theme_color_override("font_color", Color("#F5C242"))
-	objetivo.add_theme_color_override("font_outline_color", Color("#0B0B14"))
-	objetivo.add_theme_constant_override("outline_size", 4)
-	objetivo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hud.add_child(objetivo)
+	objetivo = hud.lbl_mision
 	_actualizar_objetivo()
 	hud.anuncio("ACTO 1 · PLAZA DE ACCESO\nEl error 404 bloqueó el acceso. Busca la terminal.", 4.0)
 
@@ -42,7 +35,7 @@ func construir() -> void:
 	# ------------------------------------------------------------------
 	var x := pantalla(1)
 	bloque(x, 320, 640, 40, "concreto")                           # piso (0 a 640)
-	pantalla_ixchel(x + 70, 320, "Kin, el error 404 dañó los sistemas de la Universidad del Caribe. Restaura el acceso en la terminal y recupera el fragmento del Códice en la escalinata.")
+	pantalla_ixchel(x + 70, 320, "Yoshua, el error 404 dañó los sistemas de la Universidad del Caribe. Restaura el acceso en la terminal y recupera el fragmento del Códice en la escalinata.")
 	cartel("%s / %s mover\n%s saltar (mantén para subir más)" % [Juego.tecla("izquierda"), Juego.tecla("derecha"), Juego.tecla("saltar")], x + 150, 200)
 	flecha(x + 240, 300)
 	flecha(x + 600, 300)
@@ -72,7 +65,7 @@ func construir() -> void:
 	vacio(x + 392, 330, 40)
 	bloque(x + 432, 248, 112, 112, "escalon")                     # 1072 a 1184
 	vacio(x + 544, 330, 32)
-	# Margen para el cuerpo de Kin (24 px) y una pulsación corta humana.
+	# Margen para el cuerpo de Yoshua (24 px) y una pulsación corta humana.
 	# El salto completo aún alcanza el glitch; el corto permite cruzar 32 px.
 	peligro(x + 530, 162, 70, 14)
 	cartel("Salta cerca del borde y suelta %s pronto" % Juego.tecla("saltar"), x + 360, 130)
@@ -206,7 +199,7 @@ func _on_fragmento() -> void:
 
 # =====================================================================
 #  MODO EXTRAORDINARIO: el mismo nivel con pinchos y enemigos más listos.
-#  (Kin ya tiene dash y planeo, y solo 2 vasos; las farolas curan.)
+#  (Yoshua ya tiene dash y planeo, y solo 2 vasos; las farolas curan.)
 # =====================================================================
 func _construir_extraordinario() -> void:
 	# P1: pinchos bajo la repisa del sello: sube a la repisa y bájate del otro lado
@@ -228,3 +221,13 @@ func _construir_extraordinario() -> void:
 	# cercana y vuelve a saltar antes de llegar a los pinchos (ritmo)
 	pinchos(3504, 248, 24)
 	pinchos(3632, 184, 24)
+
+func mision_actual() -> String:
+	if not acceso_reparado:
+		return "Repara la terminal de acceso"
+	return super.mision_actual()
+
+func completar_nivel() -> void:
+	if not acceso_reparado:
+		return
+	super.completar_nivel()
